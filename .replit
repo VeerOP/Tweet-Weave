@@ -37,3 +37,11 @@ author = "agent"
 task = "shell.exec"
 args = "npm run dev"
 waitForPort = 5000
+
+[userenv]
+
+[userenv.shared]
+LYZR_API_KEY = "sk-default-tieULed7INuW6wLVToytX0qemNPlwYm7"
+LYZR_USER_ID = "veernagda2006@gmail.com"
+LYZR_AGENT_ID = "693e63531a5f30753c13f44e"
+LYZR_SESSION_ID = "693e63531a5f30753c13f44e-vu4qpupwn0b"
