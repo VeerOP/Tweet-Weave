@@ -1,5 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
+import { storage } from "./storage";
 
 const LYZR_API_URL = "https://agent-prod.studio.lyzr.ai/v3/inference/chat/";
 
@@ -10,7 +11,7 @@ export async function registerRoutes(
   
   app.post("/api/generate", async (req, res) => {
     try {
-      const { message } = req.body;
+      const { message, style } = req.body;
 
       if (!message || typeof message !== "string") {
         return res.status(400).json({
@@ -84,15 +85,57 @@ Just return the tweet text, nothing else.`;
         tweet = tweet.slice(1, -1);
       }
 
+      const savedTweet = await storage.createTweet({
+        topic: message,
+        content: tweet,
+        style: style || "default",
+      });
+
       return res.json({
         success: true,
         tweet,
+        id: savedTweet.id,
       });
     } catch (error) {
       console.error("Error generating tweet:", error);
       return res.status(500).json({
         success: false,
         error: "An unexpected error occurred. Please try again.",
+      });
+    }
+  });
+
+  app.get("/api/tweets", async (req, res) => {
+    try {
+      const limit = parseInt(req.query.limit as string) || 50;
+      const tweets = await storage.getTweets(limit);
+      return res.json({ success: true, tweets });
+    } catch (error) {
+      console.error("Error fetching tweets:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to fetch tweet history.",
+      });
+    }
+  });
+
+  app.delete("/api/tweets/:id", async (req, res) => {
+    try {
+      const { id } = req.params;
+      const deleted = await storage.deleteTweet(id);
+      if (deleted) {
+        return res.json({ success: true });
+      } else {
+        return res.status(404).json({
+          success: false,
+          error: "Tweet not found.",
+        });
+      }
+    } catch (error) {
+      console.error("Error deleting tweet:", error);
+      return res.status(500).json({
+        success: false,
+        error: "Failed to delete tweet.",
       });
     }
   });
